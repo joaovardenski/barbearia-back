@@ -37,3 +37,7 @@ uploads/
 
 # Swagger / Docs gerados
 swagger-output.json
+
+/src/generated/prisma
+
+/generated/prisma
