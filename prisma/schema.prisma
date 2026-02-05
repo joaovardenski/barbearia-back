@@ -18,12 +18,190 @@ enum BarbeariaStatus {
   INATIVA
 }
 
+enum UserRole {
+  admin
+  barbeiro
+  cliente
+}
+
+enum ServicoStatus {
+  ATIVO
+  INATIVO
+}
+
+enum AgendamentoStatus {
+  agendado
+  confirmado
+  concluido
+  cancelado
+  no_show
+}
+
+enum FormaPagamento {
+  dinheiro
+  pix
+  cartao
+}
+
+enum PagamentoStatus {
+  pendente
+  pago
+  estornado
+}
+
 model Barbearia {
   id            Int             @id @default(autoincrement())
   nome          String          @unique
   localizacao   String          @unique
   contato       String
-  situacao      BarbeariaStatus
+  situacao      BarbeariaStatus @default(ATIVA)
   criado_em     DateTime        @default(now())
-  atualizado_em DateTime        @default(now())
+  atualizado_em DateTime        @updatedAt
+
+  usuarios     Usuario[]
+  servicos     Servico[]
+  bloqueios    HorarioBloqueado[]
+  agendamentos Agendamento[]
+
+  @@map("barbearias")
+}
+
+model Usuario {
+  id            String   @id @default(uuid())
+  nome          String
+  telefone      String?
+  email         String   @unique
+  senha         String
+  permissao     UserRole @default(cliente)
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  // Relacionamento com Barbearia (Corrigido para Int)
+  barbearia_id Int
+  barbearia    Barbearia @relation(fields: [barbearia_id], references: [id])
+
+  servicos_barbeiro   ServicoBarbeiro[]
+  horarios_trabalho   HorarioTrabalho[]
+  horarios_bloqueados HorarioBloqueado[]
+
+  agendamentos_cliente  Agendamento[] @relation("ClienteAgendamentos")
+  agendamentos_barbeiro Agendamento[] @relation("BarbeiroAgendamentos")
+
+  avaliacoes_feitas    Avaliacao[] @relation("ClienteAvaliacoes")
+  avaliacoes_recebidas Avaliacao[] @relation("BarbeiroAvaliacoes")
+
+  @@map("usuarios")
+}
+
+model Servico {
+  id              Int           @id @default(autoincrement())
+  nome            String
+  duracao_minutos Int
+  valor           Decimal       @db.Decimal(10, 2)
+  situacao        ServicoStatus @default(ATIVO)
+
+  barbearia_id Int
+  barbearia    Barbearia @relation(fields: [barbearia_id], references: [id])
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  servicos_barbeiros ServicoBarbeiro[]
+  agendamentos       Agendamento[]
+
+  @@map("servicos")
+}
+
+model ServicoBarbeiro {
+  id          Int     @id @default(autoincrement())
+  barbeiro_id String
+  barbeiro    Usuario @relation(fields: [barbeiro_id], references: [id])
+  servico_id  Int
+  servico     Servico @relation(fields: [servico_id], references: [id])
+
+  @@unique([barbeiro_id, servico_id])
+  @@map("servicos_barbeiros")
+}
+
+model HorarioTrabalho {
+  id           Int     @id @default(autoincrement())
+  barbeiro_id  String
+  barbeiro     Usuario @relation(fields: [barbeiro_id], references: [id])
+  dia_semana   Int
+  hora_inicio  String
+  hora_fim     String
+  slot_minutos Int     @default(30)
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@unique([barbeiro_id, dia_semana])
+  @@map("horarios_trabalho")
+}
+
+model HorarioBloqueado {
+  id               Int       @id @default(autoincrement())
+  barbearia_id     Int
+  barbearia        Barbearia @relation(fields: [barbearia_id], references: [id])
+  barbeiro_id      String?
+  barbeiro         Usuario?  @relation(fields: [barbeiro_id], references: [id])
+  data_hora_inicio DateTime
+  data_hora_fim    DateTime
+  motivo           String?
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@map("horarios_bloqueados")
+}
+
+model Agendamento {
+  id           String    @id @default(uuid())
+  cliente_id   String
+  cliente      Usuario   @relation("ClienteAgendamentos", fields: [cliente_id], references: [id])
+  barbearia_id Int
+  barbearia    Barbearia @relation(fields: [barbearia_id], references: [id])
+  barbeiro_id  String
+  barbeiro     Usuario   @relation("BarbeiroAgendamentos", fields: [barbeiro_id], references: [id])
+  servico_id   Int
+  servico      Servico   @relation(fields: [servico_id], references: [id])
+
+  data_hora_inicio DateTime
+  data_hora_fim    DateTime
+  status           AgendamentoStatus @default(agendado)
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  avaliacao Avaliacao?
+  pagamento Pagamento?
+
+  @@map("agendamentos")
+}
+
+model Avaliacao {
+  id             Int         @id @default(autoincrement())
+  agendamento_id String      @unique
+  agendamento    Agendamento @relation(fields: [agendamento_id], references: [id])
+  cliente_id     String
+  cliente        Usuario     @relation("ClienteAvaliacoes", fields: [cliente_id], references: [id])
+  barbeiro_id    String
+  barbeiro       Usuario     @relation("BarbeiroAvaliacoes", fields: [barbeiro_id], references: [id])
+  nota           Int
+  comentario     String?     @db.Text
+  criado_em      DateTime    @default(now())
+
+  @@map("avaliacoes")
+}
+
+model Pagamento {
+  id              Int             @id @default(autoincrement())
+  agendamento_id  String          @unique
+  agendamento     Agendamento     @relation(fields: [agendamento_id], references: [id])
+  valor           Decimal         @db.Decimal(10, 2)
+  forma_pagamento FormaPagamento
+  status          PagamentoStatus @default(pago)
+  pago_em         DateTime?       @default(now())
+
+  @@map("pagamentos")
 }

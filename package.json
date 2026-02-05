@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.ts"
+    "setup": "npx prisma migrate deploy",
+    "dev": "nodemon index.ts",
+    "docker": "docker compose down && docker compose up --build -d"
   },
   "keywords": [],
   "author": "",

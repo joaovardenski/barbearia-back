@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: prumo_db
+    environment:
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: password_123
+      POSTGRES_DB: prumo
+    ports:
+      - "5000:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: prumo_api
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - DATABASE_URL=postgresql://user_admin:password_123@db:5432/prumo?schema=public
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
