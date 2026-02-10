@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "setup": "npx prisma migrate deploy",
+    "setup": "npx prisma migrate deploy && npx prisma db seed",
     "dev": "nodemon index.ts",
-    "docker": "docker compose down && docker compose up --build -d"
+    "docker": "docker compose down -v && docker compose up --build -d"
   },
   "keywords": [],
   "author": "",
@@ -16,12 +16,14 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "pg": "^8.16.3"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@tsconfig/node20": "^20.1.8",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.3",

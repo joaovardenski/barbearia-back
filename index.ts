@@ -8,6 +8,6 @@ app.get("/hello", (req, res) => {
   });
 });
 
-app.listen(4000, () => {
-  console.log("Server ouvindo na porta 4000");
+app.listen(3000, () => {
+  console.log("Server ouvindo na porta 3000");
 });
